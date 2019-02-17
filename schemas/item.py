@@ -4,7 +4,7 @@ from models.item import ItemModel
 
 
 class ItemSchema(ma.ModelSchema):
-#    store = ma.Nested(StoreSchema)
+#    store = ma.Nested(StoreSchema)         # I want this.
 
     class Meta:
         model = ItemModel
