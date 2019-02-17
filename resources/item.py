@@ -36,7 +36,10 @@ class Item(Resource):
         if ItemModel.find_by_name(name):
             return {"error": ITEM_ALREADY_EXISTS_ERROR}, 400
 
-        new_item = item_schema.load(request.get_json())
+        item_json = request.get_json()
+        item_json['name'] = name
+
+        new_item = item_schema.load(item_json)
 
         try:
             new_item.save_to_db()

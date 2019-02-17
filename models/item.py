@@ -2,6 +2,7 @@ from typing import List
 
 from db import db
 
+from models.store import StoreModel
 
 class ItemModel(db.Model):
     __tablename__ = "items"
