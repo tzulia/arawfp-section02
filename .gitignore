@@ -4,3 +4,4 @@ __pycache__/
 .sock
 data.db
 .idea/
+Pipfile.lock
