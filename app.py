@@ -61,9 +61,7 @@ def invalid_token_callback(error):
 @jwt.unauthorized_loader
 def unauthorized_token_callback(error):
     return (
-        jsonify(
-            {"code": "token_invalid", "message": TOKEN_AUTH_TOKEN_INVALID}
-        ),
+        jsonify({"code": "token_invalid", "message": TOKEN_AUTH_TOKEN_INVALID}),
         401,
     )
 

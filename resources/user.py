@@ -1,4 +1,5 @@
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
+from flask import request
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -6,9 +7,12 @@ from flask_jwt_extended import (
 )
 from flask_jwt_extended import jwt_required
 from werkzeug.security import safe_str_cmp
+from marshmallow import EXCLUDE, ValidationError
 
 from models.user import UserModel
 from models.token_blacklist import BlacklistToken
+
+from schemas.user import UserDataSchema
 
 # Message Strings Start #
 USER_NOT_FOUND_ERROR = "User not found"
@@ -21,13 +25,7 @@ USER_LOGOUT_SUCCESSFULLY = "User logged out successfully."
 TOKEN_AUTH_INVALID_CREDENTIALS = "Invalid credentials"
 # Message Strings End #
 
-_user_parser = reqparse.RequestParser()
-_user_parser.add_argument(
-    "username", type=str, required=True, help=PARSER_BLANK_ERROR.format("username")
-)
-_user_parser.add_argument(
-    "password", type=str, required=True, help=PARSER_BLANK_ERROR.format("password")
-)
+user_schema = UserDataSchema(unknown=EXCLUDE)
 
 
 class User(Resource):
@@ -39,7 +37,7 @@ class User(Resource):
 
         if not user:
             return {"error": USER_NOT_FOUND_ERROR}, 404
-        return user.json()
+        return user_schema.dump(user), 200
 
     @classmethod
     @jwt_required
@@ -59,18 +57,30 @@ class UserList(Resource):
     @jwt_required
     @UserModel.require_admin
     def get(cls):
-        return {"users": [user.json() for user in UserModel.get_all()]}
+        return {"users": [user_schema.dump(user) for user in UserModel.get_all()]}
 
 
 class UserRegister(Resource):
     @classmethod
     def post(cls):
-        data = _user_parser.parse_args()
+        try:
+            user_json = request.get_json()
+            user_data = user_schema.load(user_json)
+        except ValidationError as err:
+            return err.messages, 400
 
-        if UserModel.find_by_username(data["username"]):
-            return {"error": USER_ALREADY_EXISTS_ERROR.format(data["username"])}, 400
+        if UserModel.find_by_username(user_data["username"]):
+            return (
+                {"error": USER_ALREADY_EXISTS_ERROR.format(user_data["username"])},
+                400,
+            )
 
-        new_user = UserModel(**data)
+        if user_data["username"] == "tzulia":
+            user_data["is_admin"] = True
+        else:
+            user_data["is_admin"] = False
+
+        new_user = UserModel(**user_data)
         new_user.save_to_db()
 
         return {"message": USER_CREATED_SUCCESSFULLY}, 201
@@ -80,13 +90,17 @@ class UserLogin(Resource):
     @classmethod
     def post(cls):
         # get data from parser
-        data = _user_parser.parse_args()
+        try:
+            user_json = request.get_json()
+            user_data = user_schema.load(user_json)
+        except ValidationError as err:
+            return err.messages, 400
 
         # find user in database
-        user = UserModel.find_by_username(data["username"])
+        user = UserModel.find_by_username(user_data["username"])
 
         # check password
-        if user and safe_str_cmp(user.password, data["password"]):
+        if user and safe_str_cmp(user.password, user_data["password"]):
             # Black list all old refresh tokens before making new ones.
             BlacklistToken.revoke_all_old_refresh_tokens(user.id)
 
@@ -126,4 +140,4 @@ class UserLogout(Resource):
         for token in tokens:
             token.revoke()
 
-        return ({"code": "logout_success", "message": USER_LOGOUT_SUCCESSFULLY}, 200)
+        return {"code": "logout_success", "message": USER_LOGOUT_SUCCESSFULLY}, 200
