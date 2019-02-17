@@ -1,10 +1,10 @@
 from ma import ma
 from models.item import ItemModel
-from schemas.store import StoreSchema
+#from schemas.store import StoreSchema
 
 
 class ItemSchema(ma.ModelSchema):
-    store = ma.Nested(StoreSchema)
+#    store = ma.Nested(StoreSchema)
 
     class Meta:
         model = ItemModel
