@@ -1,13 +1,10 @@
-from typing import Dict, List, Union
+from typing import List
 
 from datetime import datetime
 
 from flask_jwt_extended import decode_token
 
 from db import db
-
-
-TokenJSON = Dict[str, Union[int, str, bool, datetime]]
 
 
 def _epoch_utc_to_datetime(epoch_utc: str):
@@ -30,26 +27,20 @@ class BlacklistToken(db.Model):
     revoked = db.Column(db.Boolean, nullable=False)
     expires = db.Column(db.DateTime, nullable=False)
 
-    user = db.relationship("UserModel")
+    user = db.relationship("UserModel", backref="tokens", lazy="select")
 
-    def __init__(self, encoded_token: str):
+    @classmethod
+    def create_new_token(cls, encoded_token: str) -> "BlacklistToken":
         decoded_token = decode_token(encoded_token)
-        self.jti = decoded_token["jti"]
-        self.token_type = decoded_token["type"]
-        self.user_identity = int(decoded_token["identity"])
-        self.revoked = False
-        self.expires = _epoch_utc_to_datetime(decoded_token["exp"])
-
-    def json(self) -> TokenJSON:
-        return {
-            "id": self.id,
-            "jti": self.jti,
-            "token_type": self.token_type,
-            "user_identify": self.user_identity,
-            "revoked": self.revoked,
-            "expires": _format_datetime(self.expires),
-            "owned_by": self.user.username,
+        data_json = {
+            "jti": decoded_token["jti"],
+            "token_type": decoded_token["type"],
+            "user_identity": decoded_token["identity"],
+            "revoked": False,
+            "expires": _epoch_utc_to_datetime(decoded_token["exp"]),
         }
+
+        return BlacklistToken(**data_json)
 
     @classmethod
     def get_all_tokens_by_user_id(cls, user_id: int) -> List["BlacklistToken"]:
@@ -75,8 +66,8 @@ class BlacklistToken(db.Model):
             token.revoke()
 
     @classmethod
-    def get_all(cls, filter_result: int = 10) -> List[TokenJSON]:
-        return [t.json() for t in cls.query.limit(filter_result).all()]
+    def get_all(cls, filter_result: int = 10) -> List["BlacklistToken"]:
+        return cls.query.limit(filter_result).all()
 
     def revoke(self) -> bool:
         self.revoked = True

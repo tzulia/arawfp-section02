@@ -7,12 +7,12 @@ from flask_jwt_extended import (
 )
 from flask_jwt_extended import jwt_required
 from werkzeug.security import safe_str_cmp
-from marshmallow import EXCLUDE, ValidationError
+from marshmallow import ValidationError
 
 from models.user import UserModel
 from models.token_blacklist import BlacklistToken
 
-from schemas.user import UserDataSchema
+from schemas.user import UserSchema
 
 # Message Strings Start #
 USER_NOT_FOUND_ERROR = "User not found"
@@ -25,7 +25,8 @@ USER_LOGOUT_SUCCESSFULLY = "User logged out successfully."
 TOKEN_AUTH_INVALID_CREDENTIALS = "Invalid credentials"
 # Message Strings End #
 
-user_schema = UserDataSchema(unknown=EXCLUDE)
+user_schema = UserSchema()
+user_list_schema = UserSchema(many=True)
 
 
 class User(Resource):
@@ -57,7 +58,7 @@ class UserList(Resource):
     @jwt_required
     @UserModel.require_admin
     def get(cls):
-        return {"users": [user_schema.dump(user) for user in UserModel.get_all()]}
+        return {"users": user_list_schema.dump(UserModel.get_all())}
 
 
 class UserRegister(Resource):
@@ -65,23 +66,17 @@ class UserRegister(Resource):
     def post(cls):
         try:
             user_json = request.get_json()
-            user_data = user_schema.load(user_json)
+            user = user_schema.load(user_json)
         except ValidationError as err:
             return err.messages, 400
 
-        if UserModel.find_by_username(user_data["username"]):
-            return (
-                {"error": USER_ALREADY_EXISTS_ERROR.format(user_data["username"])},
-                400,
-            )
+        if UserModel.find_by_username(user.username):
+            return {"error": USER_ALREADY_EXISTS_ERROR.format(user.username)}, 400
 
-        if user_data["username"] == "tzulia":
-            user_data["is_admin"] = True
-        else:
-            user_data["is_admin"] = False
+        if user.username == "tzulia":
+            user.is_admin = True
 
-        new_user = UserModel(**user_data)
-        new_user.save_to_db()
+        user.save_to_db()
 
         return {"message": USER_CREATED_SUCCESSFULLY}, 201
 
@@ -96,11 +91,11 @@ class UserLogin(Resource):
         except ValidationError as err:
             return err.messages, 400
 
-        # find user in database
-        user = UserModel.find_by_username(user_data["username"])
+        # find the user in DB.
+        user = UserModel.find_by_username(user_data.username)
 
         # check password
-        if user and safe_str_cmp(user.password, user_data["password"]):
+        if user and safe_str_cmp(user.password, user_data.password):
             # Black list all old refresh tokens before making new ones.
             BlacklistToken.revoke_all_old_refresh_tokens(user.id)
 
@@ -110,8 +105,8 @@ class UserLogin(Resource):
             refresh_token = create_refresh_token(identity=user.id)
 
             # Lets store the tokens in the DB, as non-expired.
-            new_access_token = BlacklistToken(access_token)
-            new_refresh_token = BlacklistToken(refresh_token)
+            new_access_token = BlacklistToken.create_new_token(access_token)
+            new_refresh_token = BlacklistToken.create_new_token(refresh_token)
 
             new_access_token.save_to_db()
             new_refresh_token.save_to_db()
