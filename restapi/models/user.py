@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 from functools import wraps
 
-from db import db
+from restapi.db import db
 from flask_jwt_extended import get_jwt_identity
 
 

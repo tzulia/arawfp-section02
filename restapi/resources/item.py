@@ -2,9 +2,9 @@ from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import jwt_required
 
-from models.item import ItemModel
+from restapi.models.item import ItemModel
 
-from schemas.item import ItemSchema
+from restapi.schemas.item import ItemSchema
 
 # Message Strings Start #
 PARSER_BLANK_ERROR = "'{}' cannot be blank."

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from flask_jwt_extended import decode_token
 
-from db import db
+from restapi.db import db
 
 
 def _epoch_utc_to_datetime(epoch_utc: str):

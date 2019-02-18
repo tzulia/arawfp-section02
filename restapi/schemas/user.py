@@ -1,6 +1,6 @@
-from ma import ma
-from models.user import UserModel
-from schemas.token_blacklist import BlacklistTokenSchema
+from restapi.ma import ma
+from restapi.models.user import UserModel
+from .token_blacklist import BlacklistTokenSchema
 
 
 class UserSchema(ma.ModelSchema):

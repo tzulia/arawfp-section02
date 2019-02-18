@@ -1,22 +1,25 @@
 from typing import List
 
-from db import db
+from restapi.db import db
 
+from .store import StoreModel
 
-class StoreModel(db.Model):
-    __tablename__ = "stores"
+class ItemModel(db.Model):
+    __tablename__ = "items"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False, unique=True)
+    price = db.Column(db.Float(precision=2), nullable=False)
 
-    items = db.relationship("ItemModel", lazy="dynamic")
+    store_id = db.Column(db.Integer, db.ForeignKey("stores.id"))
+    store = db.relationship("StoreModel")
 
     @classmethod
-    def find_by_name(cls, name) -> "StoreModel":
+    def find_by_name(cls, name: str) -> "ItemModel":
         return cls.query.filter_by(name=name).first()
 
     @classmethod
-    def find_all(cls) -> List["StoreModel"]:
+    def find_all(cls) -> List["ItemModel"]:
         return cls.query.all()
 
     def save_to_db(self) -> None:

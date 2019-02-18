@@ -9,10 +9,10 @@ from flask_jwt_extended import jwt_required
 from werkzeug.security import safe_str_cmp
 from marshmallow import ValidationError
 
-from models.user import UserModel
-from models.token_blacklist import BlacklistToken
+from restapi.models.user import UserModel
+from restapi.models.token_blacklist import BlacklistToken
 
-from schemas.user import UserSchema
+from restapi.schemas.user import UserSchema
 
 # Message Strings Start #
 USER_NOT_FOUND_ERROR = "User not found"

@@ -1,5 +1,5 @@
-from ma import ma
-from models.token_blacklist import BlacklistToken
+from restapi.ma import ma
+from restapi.models.token_blacklist import BlacklistToken
 
 
 class BlacklistTokenSchema(ma.ModelSchema):

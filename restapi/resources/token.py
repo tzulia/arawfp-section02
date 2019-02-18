@@ -6,8 +6,8 @@ from flask_jwt_extended import (
     create_access_token,
 )
 
-from models.token_blacklist import BlacklistToken
-from schemas.token_blacklist import BlacklistTokenSchema
+from restapi.models.token_blacklist import BlacklistToken
+from restapi.schemas.token_blacklist import BlacklistTokenSchema
 
 token_schema = BlacklistTokenSchema()
 

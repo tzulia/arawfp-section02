@@ -1,8 +1,8 @@
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required
 
-from models.store import StoreModel
-from schemas.store import StoreSchema
+from restapi.models.store import StoreModel
+from restapi.schemas.store import StoreSchema
 
 # Message String Start #
 STORE_NOT_FOUND_ERROR = "Store not found"
