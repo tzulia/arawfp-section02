@@ -74,7 +74,10 @@ def create_app():
 
     @jwt.expired_token_loader
     def expired_token_callback():
-        return jsonify({"code": "token_expired", "message": TOKEN_AUTH_TOKEN_EXPIRED}), 401
+        return (
+            jsonify({"code": "token_expired", "message": TOKEN_AUTH_TOKEN_EXPIRED}),
+            401,
+        )
 
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
@@ -93,12 +96,17 @@ def create_app():
     @jwt.needs_fresh_token_loader
     def needs_fresh_token_callback():
         return (
-            jsonify({"code": "token_need_fresh", "message": TOKEN_AUTH_TOKEN_NEED_FRESH}),
+            jsonify(
+                {"code": "token_need_fresh", "message": TOKEN_AUTH_TOKEN_NEED_FRESH}
+            ),
             401,
         )
 
     @jwt.revoked_token_loader
     def revoked_token_callback():
-        return jsonify({"code": "token_revoked", "message": TOKEN_AUTH_TOKEN_REVOKED}), 401
+        return (
+            jsonify({"code": "token_revoked", "message": TOKEN_AUTH_TOKEN_REVOKED}),
+            401,
+        )
 
     return app

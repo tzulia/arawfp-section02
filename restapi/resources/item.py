@@ -37,7 +37,7 @@ class Item(Resource):
             return {"error": ITEM_ALREADY_EXISTS_ERROR}, 400
 
         item_json = request.get_json()
-        item_json['name'] = name
+        item_json["name"] = name
 
         new_item = item_schema.load(item_json)
 

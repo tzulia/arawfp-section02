@@ -3,7 +3,7 @@ from restapi.models.item import ItemModel
 
 
 class ItemSchema(ma.ModelSchema):
-    store = ma.Nested("StoreSchema", only=['name', 'id'])         # I want this.
+    store = ma.Nested("StoreSchema", only=["name", "id"])  # I want this.
 
     class Meta:
         model = ItemModel
